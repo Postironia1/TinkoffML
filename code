@@ -1,0 +1,35 @@
+import ast
+
+def get_paths():
+    path1 = "input.txt"
+    path2 = "score.txt"
+    return path1, path2
+
+
+def main():
+    paths = get_paths()
+    f = open(paths[0], "r")
+    paths = f.read()
+    for line in paths.split('\n'):
+        pathes = line.split(' ')
+        if len(pathes) < 2:
+            continue
+        res = compare(pathes[0], pathes[1])
+
+        write_result(res, paths[1])
+
+
+def compare(source, check):
+
+    f1 = open(source)
+    f2 = open(check)
+
+    return 0
+
+
+def write_result(res, source):
+    print(res)
+
+
+if name == 'main':
+    main()
