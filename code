@@ -1,35 +1,48 @@
 import ast
+import numpy as np
 
-def get_paths():
-    path1 = "input.txt"
-    path2 = "score.txt"
-    return path1, path2
+def normalize_code(code):
+    """Uses the ast library to parse and normalize the given code."""
+    tree = ast.parse(code)
+    return ast.dump(tree)
 
+def damerau_levenshtein_distance(s1, s2):
+    """Calculates the Damerau-Levenshtein distance between two strings."""
+    d = np.zeros((len(s1) + 1, len(s2) + 1))
+    for i in range(len(s1) + 1):
+        d[i, 0] = i
+    for j in range(len(s2) + 1):
+        d[0, j] = j
+    for i in range(1, len(s1) + 1):
+        for j in range(1, len(s2) + 1):
+            if s1[i - 1] == s2[j - 1]:
+                d[i, j] = d[i - 1, j - 1]
+            else:
+                substitution_cost = d[i - 1, j - 1] + 1
+                insertion_cost = d[i, j - 1] + 1
+                deletion_cost = d[i - 1, j] + 1
+                transposition_cost = np.inf
+                if i > 1 and j > 1 and s1[i - 2] == s2[j - 1] and s1[i - 1] == s2[j - 2]:
+                    transposition_cost = d[i - 2, j - 2] + 1
+                d[i, j] = min(substitution_cost, insertion_cost, deletion_cost, transposition_cost)
+    return d[len(s1), len(s2)]
 
-def main():
-    paths = get_paths()
-    f = open(paths[0], "r")
-    paths = f.read()
-    for line in paths.split('\n'):
-        pathes = line.split(' ')
-        if len(pathes) < 2:
-            continue
-        res = compare(pathes[0], pathes[1])
+def antiplagiarism_check(code1, code2, threshold=0.9):
+    """Checks if the Damerau-Levenshtein distance between the normalized codes is below the threshold."""
+    normalized_code1 = normalize_code(code1)
+    normalized_code2 = normalize_code(code2)
+    distance = damerau_levenshtein_distance(normalized_code1, normalized_code2)
+    similarity = 1 - (distance / max(len(normalized_code1), len(normalized_code2)))
+    return int(similarity * 100)
 
-        write_result(res, paths[1])
+def compare_codes(file1, file2, threshold=0.9):
+    """Parses the two Python files and compares their contents."""
+    with open(file1) as f1, open(file2) as f2:
+        code1 = f1.read()
+        code2 = f2.read()
+        score = antiplagiarism_check(code1, code2, threshold=threshold)
+        with open("result.txt", "w") as result_file:
+            result_file.write(f"The similarity score between {file1} and {file2} is: {score}%")
+        return score
 
-
-def compare(source, check):
-
-    f1 = open(source)
-    f2 = open(check)
-
-    return 0
-
-
-def write_result(res, source):
-    print(res)
-
-
-if name == 'main':
-    main()
+compare_codes("file1.py", "file2.py", threshold=0.9)
